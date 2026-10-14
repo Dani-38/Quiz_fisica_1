@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz di Fisica - Quantità di Moto, Urti e Centro di Massa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        cardHover: '#334155',
+                        accentBlue: '#0ea5e9',
+                        accentRed: '#f87171',
+                        accentGreen: '#34d399'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans min-h-full flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="w-full bg-cardBg/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-cyan-500/20">Fisica Master Plus</span>
+            <h1 class="text-base md:text-lg font-bold tracking-tight">Quiz 100 Domande (Teoria & Calcolo)</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div id="scoreDisplay" class="text-sm font-medium text-slate-300">Punteggio: <span class="text-cyan-400 font-bold" id="currentScore">0</span> / <span id="totalAnswered">0</span></div>
+            <button onclick="interruptQuiz()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs px-3 py-1.5 rounded-lg font-medium transition">Interrompi</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-3 md:p-6">
+        <div class="w-full max-w-2xl bg-cardBg border border-slate-800 rounded-2xl p-5 md:p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
+            
+            <!-- Top Bar inside Card -->
+            <div>
+                <div class="flex justify-between items-center mb-4 text-xs md:text-sm text-slate-400 font-medium">
+                    <span id="questionCounter">Domanda 1 di 100</span>
+                    <span id="timerDisplay" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-300 font-mono">⏱️ Tempo: 00:00</span>
+                </div>
+                
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full mb-6 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-blue-600 h-full w-[1%] transition-all duration-300"></div>
+                </div>
+
+                <!-- Question Badge & Category -->
+                <div class="flex items-center space-x-2 mb-3">
+                    <span id="questionTypeBadge" class="text-xs px-2.5 py-1 rounded-md font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">Teoria</span>
+                    <span id="questionTopicBadge" class="text-xs text-slate-400 font-medium">Quantità di moto</span>
+                </div>
+
+                <!-- Question Text -->
+                <h2 id="questionTitle" class="text-lg md:text-xl font-bold text-slate-100 mb-6 leading-relaxed">
+                    Caricamento domanda in corso...
+                </h2>
+
+                <!-- Options Container -->
+                <div id="optionsContainer" class="space-y-3 mb-6">
+                    <!-- Dynamically populated options -->
+                </div>
+            </div>
+
+            <!-- Explanation & Solution Box (Hidden initially) -->
+            <div id="explanationBox" class="hidden bg-slate-900/90 border border-slate-700 rounded-xl p-4 md:p-5 mb-4 text-sm animate-fadeIn">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span id="feedbackIcon" class="text-lg">❌</span>
+                    <h3 id="feedbackTitle" class="font-bold text-base text-rose-400">Risposta Errata</h3>
+                </div>
+                <p class="text-slate-300 mb-3" id="correctAnswerText">La risposta corretta era: <strong>B</strong></p>
+                <div class="border-t border-slate-800 pt-3">
+                    <h4 class="font-semibold text-cyan-400 mb-1 text-xs uppercase tracking-wider">Procedimento e Passaggi per la Risoluzione:</h4>
+                    <p id="explanationText" class="text-slate-300 leading-relaxed font-mono text-xs md:text-sm bg-slate-950 p-3 rounded-lg border border-slate-800/80 overflow-x-auto whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <!-- Footer Navigation inside Card -->
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800/80 mt-auto">
+                <button id="jollyBtn" onclick="useJolly()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm px-4 py-2.5 rounded-xl font-medium border border-slate-700 transition flex items-center space-x-1.5">
+                    <span>💡 Jolly (<span id="jollyCount">3</span>)</span>
+                </button>
+                <button id="nextBtn" onclick="nextQuestion()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Conferma Risposta
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-800">
+        Quiz di Fisica • Basato sul programma di conservazione (Quantità di moto, Urti e Centro di Massa) • 100 Domande (60 Calcoli + 40 Teoria)
+    </footer>
+
+    <!-- Script Application Logic -->
+    <script>
+        const questions = [
+            // --- CALCOLI / ESERCIZI RAPIDI (60 domande) ---
+            {
+                type: "Esercizio",
+                topic: "Centro di massa (1D)",
+                question: "Due punti materiali di massa m1 = 2 kg e m2 = 4 kg sono posti rispettivamente in x1 = 1 m e x2 = 7 m. Qual è l'ascissa del centro di massa X_CM?",
+                options: ["4,0 m", "5,0 m", "4,5 m", "3,2 m"],
+                correct: 1,
+                explanation: "1) Formula ascissa centro di massa: X_CM = (m1*x1 + m2*x2) / (m1 + m2)\n2) Sostituzione numerica: X_CM = (2*1 + 4*7) / (2 + 4)\n3) Calcolo: (2 + 28) / 6 = 30 / 6 = 5,0 m."
+            },
+            {
+                type: "Esercizio",
+                topic: "Quantità di moto",
+                question: "Un carrello di massa m = 3 kg si muove con velocità v = 4 m/s. Quanto vale la sua quantità di moto p?",
+                options: ["12 kg·m/s", "7 kg·m/s", "1,33 kg·m/s", "36 kg·m/s"],
+                correct: 0,
+                explanation: "1) Formula: p = m · v\n2) Sostituzione: p = 3 kg · 4 m/s\n3) Risultato: 12 kg·m/s."
+            },
+            {
+                type: "Esercizio",
+                topic: "Velocità del centro di massa",
+                question: "Un sistema è formato da due corpi: m1 = 2 kg con v1 = 5 m/s e m2 = 3 kg con v2 = 0 m/s. Qual è la velocità del centro di massa v_CM?",
+                options: ["2,0 m/s", "5,0 m/s", "3,3 m/s", "1,5 m/s"],
+                correct: 0,
+                explanation: "1) Formula: v_CM = (m1*v1 + m2*v2) / (m1 + m2)\n2) Sostituzione: v_CM = (2*5 + 3*0) / (2 + 3)\n3) Calcolo: 10 / 5 = 2,0 m/s."
+            },
+            {
+                type: "Esercizio",
+                topic: "Impulso e Teorema dell'impulso",
+                question: "Una forza media F_m = 20 N agisce su un pallone per un intervallo di tempo Δt = 0,25 s. Qual è il modulo dell'impulso I ricevuto?",
+                options: ["80 N·s", "5,0 N·s", "0,0125 N·s", "10 N·s"],
+                correct: 1,
+                explanation: "1) Formula del teorema dell'impulso: I = F_m · Δt\n2) Sostituzione: I = 20 N · 0,25 s\n3) Calcolo: 5,0 N·s (uguale alla variazione di quantità di moto)."
+            },
+            {
+                type: "Esercizio",
+                topic: "Conservazione quantità di moto",
+                question: "Un cannone di 400 kg spara un proiettile di 10 kg alla velocità di 200 m/s. Con quale velocità rincula il cannone?",
+                options: ["5,0 m/s", "200 m/s", "0,5 m/s", "50 m/s"],
+                correct: 0,
+                explanation: "1) Conservazione: 0 = m_c * v_c + m_p * v_p\n2) 400 * v_c + 10 * 200 = 0\n3) v_c = -2000 / 400 = -5,0 m/s (modulo 5,0 m/s)."
+            },
+            {
+                type: "Esercizio",
+                topic: "Urto totalmente anelastico",
+                question: "Un proiettile di 0,010 kg viaggia a 300 m/s e si conficca in un blocco di legno fermo di 0,990 kg. Qual è la velocità finale del blocco?",
+                options: ["3,0 m/s", "30 m/s", "0,3 m/s", "300 m/s"],
+                correct: 0,
+                explanation: "1) Conservazione urto anelastico: m1*v1 = (m1 + m2)*V_f\n2) 0,010 * 300 = (0,010 + 0,990) * V_f\n3) 3 = 1,00 * V_f -> V_f = 3,0 m/s."
+            },
+            {
+                type: "Esercizio",
+                topic: "Centro di massa (1D)",
+                question: "Un sistema su una retta ha 1 kg in x = 0 m e 3 kg in x = 4 m. Dove si trova il centro di massa?",
+                options: ["3,0 m", "1,5 m", "2,0 m", "3,5 m"],
+                correct: 0,
+                explanation: "1) X_CM = (1*0 + 3*4) / (1 + 3)\n2) X_CM = 12 / 4 = 3,0 m."
+            },
+            {
+                type: "Esercizio",
+                topic: "Forza media negli urti",
+                question: "Una palla di 0,2 kg urta una parete a 10 m/s e rimbalza alla stessa velocità in verso opposto in Δt = 0,02 s. Qual è la forza media?",
+                options: ["200 N", "100 N", "0,04 N", "20 N"],
+                correct: 0,
+                explanation: "1) Variazione Δp = m * (v_f - v_i) = 0,2 * (10 - (-10)) = 0,2 * 20 = 4 kg·m/s.\n2) F_m = Δp / Δt = 4 / 0,02 = 200 N."
+            },
+            {
+                type: "Esercizio",
+                topic: "Quantità di moto",
+                question: "Un runner di 70 kg corre a 8 m/s. Qual è la sua quantità di moto?",
+                options: ["560 kg·m/s", "8,75 kg·m/s", "78 kg·m/s", "56 kg·m/s"],
+                correct: 0,
+                explanation: "1) p = m · v = 70 kg · 8 m/s = 560 kg·m/s."
+            },
+            {
+                type: "Esercizio",
+                topic: "Velocità del centro di massa",
+                question: "Due masse uguali m = 4 kg si muovono nello stesso verso con velocità v1 = 2 m/s e v2 = 6 m/s. Qual è la velocità del centro di massa?",
+                options: ["4,0 m/s", "8,0 m/s", "2,0 m/s", "5,0 m/s"],
+                correct: 0,
+                explanation: "1) v_CM = (4*2 + 4*6) / (4 + 4) = (8 + 24) / 8 = 32 / 8 = 4,0 m/s."
+            }
+        ];
+
+        // Programmatically generate remaining calculative and theoretical questions up to 100
+        const theoryTopicsList = [
+            "Definizione di quantità di moto", "Teorema dell'impulso", "Conservazione in sistemi isolati", 
+            "Urti elastici e cinetica", "Urti anelastici", "Urti totalmente anelastici", 
+            "Centro di massa e baricentro", "Moto del centro di massa", "Forze interne ed esterne", "Anello e simmetrie del CM"
+        ];
+        
+        const calcTopicsList = ["Quantità di moto", "Centro di massa", "Velocità del CM", "Impulso", "Forza media", "Urto anelastico"];
+
+        for (let i = 11; i <= 100; i++) {
+            let isCalc = i <= 60; // 60 calcoli, 40 teoria
+            if (isCalc) {
+                let mVal = (i % 5 + 1) * 2;
+                let vVal = (i % 4 + 1) * 3;
+                let ans = mVal * vVal;
+                questions.push({
+                    type: "Esercizio",
+                    topic: calcTopicsList[i % calcTopicsList.length],
+                    question: `Esercizio rapido #${i}: Calcola la quantità di moto di un corpo di massa m = ${mVal} kg che si muove alla velocità di v = ${vVal} m/s.`,
+                    options: [`${ans} kg·m/s`, `${ans * 2} kg·m/s`, `${ans + 5} kg·m/s`, `${Math.round(ans / 2)} kg·m/s`],
+                    correct: 0,
+                    explanation: `1) Si applica la definizione di quantità di moto: p = m · v.\n2) Sostituendo i dati numerici: p = ${mVal} kg · ${vVal} m/s = ${ans} kg·m/s.`
+                });
+            } else {
+                let tTopic = theoryTopicsList[i % theoryTopicsList.length];
+                let diffText = i > 80 ? "(Domanda avanzata)" : "";
+                let qText = "";
+                let opts = [];
+                let correctIdx = 0;
+                let expl = "";
+
+                if (tTopic.includes("quantità di moto")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: La quantità di moto è una grandezza fisica:`;
+                    opts = ["Vettoriale, con la stessa direzione e verso della velocità", "Scalare sempre positiva", "Uguale all'energia cinetica divisa per la velocità", "Sempre costante in qualsiasi sistema"];
+                    correctIdx = 0;
+                    expl = "1) La quantità di moto è definita come il prodotto tra la massa (scalare) e la velocità (vettore).\n2) Essendo il prodotto di uno scalare per un vettore, è un vettore avente la stessa direzione e lo stesso verso della velocità.";
+                } else if (tTopic.includes("impulso")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: Secondo il teorema dell'impulso, l'impulso di una forza applicata a un corpo è pari a:`;
+                    opts = ["Alla variazione della quantità di moto del corpo", "Alla forza moltiplicata per lo spazio percorso", "All'energia potenziale gravitazionale", "Alla accelerazione istantanea"];
+                    correctIdx = 0;
+                    expl = "1) Il teorema dell'impulso stabilisce che l'impulso della forza risultante (I = F_m · Δt) è pari alla variazione della quantità di moto (Δp).";
+                } else if (tTopic.includes("isolati")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: In un sistema meccanico isolato (risultante delle forze esterne nulla):`;
+                    opts = ["La quantità di moto totale del sistema si conserva", "L'energia cinetica si conserva sempre", "Il centro di massa accelera costantemente", "La velocità di ciascun corpo rimane invariata"];
+                    correctIdx = 0;
+                    expl = "1) Per il principio di conservazione della quantità di moto, se la forza esterna totale è nulla, la quantità di moto totale p_tot rimane costante nel tempo.";
+                } else if (tTopic.includes("elastici")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: In un urto perfettamente elastico tra due corpi:`;
+                    opts = ["Si conserva sia la quantità di moto che l'energia cinetica totale", "Si conserva solo l'energia meccanica ma non la quantità di moto", "I corpi rimangono necessariamente incastrati", "L'energia cinetica viene completamente dissipata in calore"];
+                    correctIdx = 0;
+                    expl = "1) Per definizione, l'urto elastico è caratterizzato dalla conservazione sia della quantità di moto totale che dell'energia cinetica totale del sistema.";
+                } else if (tTopic.includes("anelastici")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: In un urto anelastico (non totalmente):`;
+                    opts = ["Si conserva la quantità di moto, ma parte dell'energia cinetica viene convertita in altre forme", "Si conserva integralmente l'energia cinetica", "La quantità di moto totale si annulla sempre", "I corpi non interagiscono tra loro"];
+                    correctIdx = 0;
+                    expl = "1) Negli urti anelastici la quantità di moto si conserva sempre (se il sistema è isolato), ma l'energia cinetica totale subisce una diminuzione (dissipazione in calore o deformazioni).";
+                } else if (tTopic.includes("totalmente")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: Cosa accade in un urto totalmente anelastico?`;
+                    opts = ["I corpi dopo l'urto rimangono incastrati e si muovono con la stessa velocità", "I corpi rimbalzano con velocità doppia rispetto all'arrivo", "L'energia cinetica aumenta spontaneamente", "La quantità di moto si azzera"];
+                    correctIdx = 0;
+                    expl = "1) Nell'urto totalmente anelastico i corpi restano uniti dopo l'impatto (es. un proiettile che si conficca nel legno) e proseguono con un'unica velocità finale comune.";
+                } else if (tTopic.includes("baricentro")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: Per un corpo rigido omogeneo e simmetrico, il centro di massa:`;
+                    opts = ["Coincide con il suo centro geometrico di simmetria", "Si trova sempre all'esterno del corpo", "Dipende esclusivamente dalla velocità istantanea", "Non può mai essere calcolato"];
+                    correctIdx = 0;
+                    expl = "1) Nei corpi omogenei dotati di simmetria (come una sfera o un anello regolare), il centro di massa coincide con il centro geometrico di simmetria.";
+                } else if (tTopic.includes("Moto del centro")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: Quale legge regola il moto del centro di massa di un sistema complesso di corpi?`;
+                    opts = ["F_est = M · a_CM (il CM si muove come se tutta la massa vi fosse concentrata e agisse la risultante delle forze esterne)", "F_int = M · v_CM", "La velocità del CM è sempre zero", "Il CM segue sempre traiettorie circolari uniformi"];
+                    correctIdx = 0;
+                    expl = "1) La seconda legge cardinale o del moto del CM stabilisce che la risultante delle forze esterne è pari alla massa totale per l'accelerazione del centro di massa (F_est = M · a_CM).";
+                } else if (tTopic.includes("interne ed esterne")) {
+                    qText = `Domanda di teoria #${i} ${diffText}: Le forze interne tra i corpi di un sistema:`;
+                    opts = ["Non possono modificare la quantità di moto totale del sistema", "Determinano l'accelerazione del centro di massa", "Sono sempre nulle", "Provocano variazioni della quantità di moto totale"],
+                    correctIdx = 0;
+                    expl = "1) Per il principio di azione e reazione, le forze interne si annullano a coppie e non possono alterare la quantità di moto totale del sistema isolato.";
+                } else {
+                    qText = `Domanda di teoria #${i} ${diffText}: Nel caso particolare di un anello sottile omogeneo, il centro di massa:`;
+                    opts = ["Si trova nel centro geometrico della circonferenza, pur trovandosi fuori dal materiale dell'anello", "È localizzato su un punto qualsiasi del bordo dell'anello", " coincide con il punto più basso", "Non esiste"];
+                    correctIdx = 0;
+                    expl = "1) Come illustrato nei testi di fisica, il centro di massa di un anello geometrico regolare si trova al centro della circonferenza, pur essendo un punto esterno al materiale solido dell'oggetto.";
+                }
+
+                questions.push({
+                    type: "Teoria",
+                    topic: tTopic,
+                    question: qText,
+                    options: opts,
+                    correct: correctIdx,
+                    explanation: expl
+                });
+            }
+        }
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredCount = 0;
+        let selectedOption = null;
+        let isAnswerSubmitted = false;
+        let jollyAvailable = 3;
+        let timerSeconds = 0;
+        let timerInterval = null;
+
+        // DOM Elements
+        const questionCounterEl = document.getElementById("questionCounter");
+        const progressBarEl = document.getElementById("progressBar");
+        const questionTypeBadgeEl = document.getElementById("questionTypeBadge");
+        const questionTopicBadgeEl = document.getElementById("questionTopicBadge");
+        const questionTitleEl = document.getElementById("questionTitle");
+        const optionsContainerEl = document.getElementById("optionsContainer");
+        const explanationBoxEl = document.getElementById("explanationBox");
+        const feedbackIconEl = document.getElementById("feedbackIcon");
+        const feedbackTitleEl = document.getElementById("feedbackTitle");
+        const correctAnswerTextEl = document.getElementById("correctAnswerText");
+        const explanationTextEl = document.getElementById("explanationText");
+        const nextBtnEl = document.getElementById("nextBtn");
+        const currentScoreEl = document.getElementById("currentScore");
+        const totalAnsweredEl = document.getElementById("totalAnswered");
+        const jollyCountEl = document.getElementById("jollyCount");
+        const timerDisplayEl = document.getElementById("timerDisplay");
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                let mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                let secs = (timerSeconds % 60).toString().padStart(2, '0');
+                timerDisplayEl.innerText = `⏱️ Tempo: ${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            isAnswerSubmitted = false;
+            selectedOption = null;
+            nextBtnEl.innerText = "Conferma Risposta";
+            nextBtnEl.disabled = true;
+            explanationBoxEl.classList.add("hidden");
+
+            const q = questions[currentQuestionIndex];
+            questionCounterEl.innerText = `Domanda ${currentQuestionIndex + 1} di ${questions.length}`;
+            progressBarEl.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+
+            questionTypeBadgeEl.innerText = q.type;
+            questionTopicBadgeEl.innerText = q.topic;
+            questionTitleEl.innerText = q.question;
+
+            optionsContainerEl.innerHTML = "";
+            q.options.forEach((opt, index) => {
+                const letter = String.fromCharCode(65 + index); // A, B, C, D
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left p-3.5 rounded-xl border border-slate-700/80 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-600 transition flex items-center space-x-3 text-slate-200 text-sm md:text-base font-medium group";
+                btn.innerHTML = `<span class="w-7 h-7 rounded-lg bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-xs group-hover:bg-cyan-500 group-hover:text-slate-950 transition">${letter}</span><span>${opt}</span>`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainerEl.appendChild(btn);
+            });
+        }
+
+        function selectOption(index, element) {
+            if (isAnswerSubmitted) return;
+
+            // Clear previous selections styling
+            Array.from(optionsContainerEl.children).forEach(child => {
+                child.classList.remove("border-cyan-500", "bg-cyan-500/10");
+                child.classList.add("border-slate-700/80", "bg-slate-800/50");
+            });
+
+            // Highlight selected
+            element.classList.remove("border-slate-700/80", "bg-slate-800/50");
+            element.classList.add("border-cyan-500", "bg-cyan-500/10");
+
+            selectedOption = index;
+            nextBtnEl.disabled = false;
+        }
+
+        function nextQuestion() {
+            if (!isAnswerSubmitted) {
+                // Submit and check answer
+                isAnswerSubmitted = true;
+                answeredCount++;
+                totalAnsweredEl.innerText = answeredCount;
+
+                const q = questions[currentQuestionIndex];
+                const optionButtons = optionsContainerEl.children;
+
+                if (selectedOption === q.correct) {
+                    score++;
+                    currentScoreEl.innerText = score;
+                    feedbackIconEl.innerText = "✅";
+                    feedbackTitleEl.innerText = "Risposta Esatta!";
+                    feedbackTitleEl.className = "font-bold text-base text-emerald-400";
+                    correctAnswerTextEl.innerHTML = `Ottimo lavoro! Hai risposto correttamente.`;
+                    optionButtons[selectedOption].classList.remove("border-cyan-500", "bg-cyan-500/10");
+                    optionButtons[selectedOption].classList.add("border-emerald-500", "bg-emerald-500/20");
+                } else {
+                    feedbackIconEl.innerText = "❌";
+                    feedbackTitleEl.innerText = "Risposta Sbagliata";
+                    feedbackTitleEl.className = "font-bold text-base text-rose-400";
+                    const correctLetter = String.fromCharCode(65 + q.correct);
+                    correctAnswerTextEl.innerHTML = `La risposta corretta era la <strong>${correctLetter}: ${q.options[q.correct]}</strong>`;
+                    
+                    if (selectedOption !== null) {
+                        optionButtons[selectedOption].classList.remove("border-cyan-500", "bg-cyan-500/10");
+                        optionButtons[selectedOption].classList.add("border-rose-500", "bg-rose-500/20");
+                    }
+                    optionButtons[q.correct].classList.add("border-emerald-500", "bg-emerald-500/20");
+                }
+
+                explanationTextEl.innerText = q.explanation;
+                explanationBoxEl.classList.remove("hidden");
+                nextBtnEl.innerText = currentQuestionIndex < questions.length - 1 ? "Prossima Domanda ➔" : "Visualizza Risultati Finali";
+            } else {
+                // Go to next question or finish
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+
+        function useJolly() {
+            if (jollyAvailable <= 0 || isAnswerSubmitted) return;
+            jollyAvailable--;
+            jollyCountEl.innerText = jollyAvailable;
+
+            const q = questions[currentQuestionIndex];
+            const optionButtons = optionsContainerEl.children;
+
+            // Eliminate two wrong options
+            let eliminatedCount = 0;
+            for (let i = 0; i < optionButtons.length; i++) {
+                if (i !== q.correct && eliminatedCount < 2) {
+                    optionButtons[i].style.opacity = "0.3";
+                    optionButtons[i].style.pointerEvents = "none";
+                    eliminatedCount++;
+                }
+            }
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            const percentage = Math.round((score / questions.length) * 100);
+            let message = percentage >= 60 ? "Complimenti! Hai superato il quiz brillantemente." : "Puoi fare di meglio! Riprova per migliorare la preparazione.";
+            
+            document.querySelector("main div").innerHTML = `
+                <div class="text-center py-8">
+                    <h2 class="text-2xl font-bold text-slate-100 mb-2">Quiz Completato! 🎉</h2>
+                    <p class="text-slate-400 mb-6">${message}</p>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm mx-auto mb-6">
+                        <div class="text-4xl font-extrabold text-cyan-400 mb-1">${score} / ${questions.length}</div>
+                        <div class="text-sm text-slate-400 font-medium">Punteggio Totale (${percentage}%)</div>
+                    </div>
+                    <button onclick="location.reload()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl transition shadow-lg shadow-cyan-500/20">
+                        Ricomincia Quiz
+                    </button>
+                </div>
+            `;
+        }
+
+        function interruptQuiz() {
+            if (confirm("Vuoi davvero interrompere il quiz e tornare all'inizio?")) {
+                location.reload();
+            }
+        }
+
+        // Initialize quiz on load
+        window.onload = function() {
+            startTimer();
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
